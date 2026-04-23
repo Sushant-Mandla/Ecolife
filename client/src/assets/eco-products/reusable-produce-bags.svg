@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-label="Reusable Produce Bags">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3fbe7"/>
+      <stop offset="100%" stop-color="#d8f0bc"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#bg)"/>
+  <rect x="260" y="180" width="170" height="250" rx="26" fill="#f6fbf1" stroke="#86b770" stroke-width="8"/>
+  <rect x="470" y="210" width="170" height="220" rx="26" fill="#f6fbf1" stroke="#86b770" stroke-width="8"/>
+  <circle cx="335" cy="300" r="30" fill="#e15b4f"/>
+  <circle cx="520" cy="300" r="26" fill="#f0b42f"/>
+  <circle cx="570" cy="320" r="24" fill="#79bf66"/>
+  <text x="450" y="535" text-anchor="middle" font-size="44" fill="#557b3d" font-family="Georgia, serif">Reusable Produce Bags</text>
+</svg>

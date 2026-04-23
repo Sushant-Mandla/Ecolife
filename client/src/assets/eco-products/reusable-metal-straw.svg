@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-label="Reusable Metal Straw">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f2f8ff"/>
+      <stop offset="100%" stop-color="#d7e8ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#bg)"/>
+  <rect x="190" y="360" width="520" height="18" rx="9" transform="rotate(-25 190 360)" fill="#8d99aa"/>
+  <rect x="260" y="390" width="460" height="18" rx="9" transform="rotate(-25 260 390)" fill="#a6b2c2"/>
+  <circle cx="620" cy="220" r="65" fill="#5aa4d6" opacity="0.25"/>
+  <text x="450" y="535" text-anchor="middle" font-size="44" fill="#44586f" font-family="Georgia, serif">Reusable Metal Straw</text>
+</svg>

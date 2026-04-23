@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-label="Compost Bin">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#edf8ea"/>
+      <stop offset="100%" stop-color="#cce8c2"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#bg)"/>
+  <rect x="300" y="180" width="300" height="300" rx="24" fill="#56695a"/>
+  <rect x="270" y="155" width="360" height="40" rx="12" fill="#3e4f42"/>
+  <path d="M450 260c30-40 85-30 90 20 3 35-24 65-90 95-66-30-93-60-90-95 5-50 60-60 90-20z" fill="#71be63"/>
+  <text x="450" y="535" text-anchor="middle" font-size="46" fill="#32563a" font-family="Georgia, serif">Compost Bin</text>
+</svg>

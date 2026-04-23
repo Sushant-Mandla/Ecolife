@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-label="Beeswax Food Wrap">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff7cf"/>
+      <stop offset="100%" stop-color="#f4dd7d"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#bg)"/>
+  <path d="M240 190l420 0 40 40 0 190-420 0-40-40z" fill="#f0c534" stroke="#d5a410" stroke-width="8"/>
+  <circle cx="420" cy="300" r="62" fill="#e07d55"/>
+  <circle cx="500" cy="290" r="52" fill="#8dbf67"/>
+  <text x="450" y="535" text-anchor="middle" font-size="44" fill="#8a6b00" font-family="Georgia, serif">Beeswax Food Wrap</text>
+</svg>
