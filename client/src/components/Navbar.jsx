@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
@@ -13,6 +13,19 @@ const Navbar = () => {
     navigate("/");
   };
 
+  const navItemClass = ({ isActive }) =>
+    `transition ${isActive ? "text-white underline underline-offset-8 decoration-2" : "hover:text-green-200"}`;
+
+  const authNavItemClass = ({ isActive }) =>
+    `transition ${isActive ? "text-white font-semibold underline underline-offset-8 decoration-2" : "hover:text-green-200"}`;
+
+  const signupClass = ({ isActive }) =>
+    `px-3 py-1 rounded transition ${
+      isActive
+        ? "bg-green-100 text-green-900 font-semibold"
+        : "bg-white text-green-700 hover:bg-green-100"
+    }`;
+
   return (
     <nav className="bg-green-700 text-white px-8 py-4 flex justify-between items-center">
       
@@ -24,24 +37,24 @@ const Navbar = () => {
       {/* Menu */}
       <ul className="hidden md:flex gap-6 font-medium items-center">
         <li>
-          <Link to="/" className="hover:text-green-200">Home</Link>
+          <NavLink to="/" end className={navItemClass}>Home</NavLink>
         </li>
 
         <li>
-          <Link to="/resources" className="hover:text-green-200">Resources</Link>
+          <NavLink to="/resources" className={navItemClass}>Resources</NavLink>
         </li>
 
         <li>
-          <Link to="/guide" className="hover:text-green-200">Guide</Link>
+          <NavLink to="/guide" className={navItemClass}>Guide</NavLink>
         </li>
  
 
         <li>
-          <Link to="/ecobot" className="hover:text-green-200">EcoBot</Link>
+          <NavLink to="/ecobot" className={navItemClass}>EcoBot</NavLink>
         </li>
 
         <li>
-          <Link to="/chat" className="hover:text-green-200">Chat</Link>
+          <NavLink to="/chat" className={navItemClass}>Chat</NavLink>
         </li>
        
 
@@ -63,14 +76,10 @@ const Navbar = () => {
         ) : (
           <>
             <li>
-              <Link to="/login" className="hover:text-green-200">
-                Login
-              </Link>
+              <NavLink to="/login" className={authNavItemClass}>Login</NavLink>
             </li>
             <li>
-              <Link to="/signup" className="bg-white text-green-700 px-3 py-1 rounded hover:bg-green-100">
-                Signup
-              </Link>
+              <NavLink to="/signup" className={signupClass}>Signup</NavLink>
             </li>
           </>
         )}

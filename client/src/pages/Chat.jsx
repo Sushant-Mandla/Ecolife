@@ -3,7 +3,7 @@ import io from "socket.io-client";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import MessageBubble from "../components/chat/MessageBubble";
-import { Mic, Square, Paperclip, Send } from "lucide-react";
+import { Mic, Square, Paperclip, Send, X } from "lucide-react";
 
 const socket = io("http://localhost:5000");
 
@@ -19,6 +19,7 @@ const Chat = () => {
   const [uploading, setUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [replyTo, setReplyTo] = useState(null);
 
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -27,12 +28,19 @@ const Chat = () => {
   const recordingTimerRef = useRef(null);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/messages")
-      .then(res => setMessages(res.data));
-
-    if (user?.id) {
-      socket.emit("userOnline", user.id);
+    if (!user?.id) {
+      setMessages([]);
+      return;
     }
+
+    axios
+      .get("http://localhost:5000/api/messages", {
+        headers: { "x-user-id": user.id },
+      })
+      .then((res) => setMessages(res.data))
+      .catch(() => setMessages([]));
+
+    socket.emit("userOnline", user.id);
 
     socket.on("receiveMessage", (msg) => {
       setMessages(prev => [...prev, msg]);
@@ -41,6 +49,12 @@ const Chat = () => {
     socket.on("reactionUpdated", (updated) => {
       setMessages(prev =>
         prev.map(m => m._id === updated._id ? updated : m)
+      );
+    });
+
+    socket.on("messageUpdated", (updated) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updated._id ? updated : m))
       );
     });
 
@@ -54,6 +68,7 @@ const Chat = () => {
     return () => {
       socket.off("receiveMessage");
       socket.off("reactionUpdated");
+      socket.off("messageUpdated");
       socket.off("onlineUsers");
       socket.off("typing");
       if (recordingTimerRef.current) {
@@ -69,17 +84,41 @@ const Chat = () => {
   const sendMessage = () => {
     if (!text.trim() || !user?.id) return;
 
+    const replyPayload = replyTo
+      ? {
+          messageId: replyTo._id,
+          userId: replyTo.userId,
+          userName: replyTo.userName,
+          text:
+            replyTo.text ||
+            (replyTo.fileName ? `Attachment: ${replyTo.fileName}` : "Voice message"),
+        }
+      : null;
+
     socket.emit("sendMessage", {
       userId: user.id,
       userName: user.name,
       text: text.trim(),
+      replyTo: replyPayload,
     });
 
     setText("");
+    setReplyTo(null);
   };
 
   const sendMediaMessage = (payload) => {
     if (!user?.id) return;
+
+    const replyPayload = replyTo
+      ? {
+          messageId: replyTo._id,
+          userId: replyTo.userId,
+          userName: replyTo.userName,
+          text:
+            replyTo.text ||
+            (replyTo.fileName ? `Attachment: ${replyTo.fileName}` : "Voice message"),
+        }
+      : null;
 
     socket.emit("sendMessage", {
       userId: user.id,
@@ -88,7 +127,12 @@ const Chat = () => {
       fileUrl: payload.fileUrl || "",
       fileName: payload.fileName || "",
       audioUrl: payload.audioUrl || "",
+      isForwarded: payload.isForwarded || false,
+      forwardedFrom: payload.forwardedFrom || null,
+      replyTo: replyPayload,
     });
+
+    setReplyTo(null);
   };
 
   const uploadFile = async (file) => {
@@ -239,6 +283,75 @@ const Chat = () => {
     });
   };
 
+  const togglePin = (messageId) => {
+    if (!user?.id) return;
+    socket.emit("togglePin", { messageId, userId: user.id });
+  };
+
+  const toggleStar = (messageId) => {
+    if (!user?.id) return;
+    socket.emit("toggleStar", { messageId, userId: user.id });
+  };
+
+  const handleReply = (message) => {
+    setReplyTo(message);
+  };
+
+  const handleForward = (message) => {
+    if (!user?.id) return;
+
+    sendMediaMessage({
+      text: message.text || "",
+      fileUrl: message.fileUrl || "",
+      fileName: message.fileName || "",
+      audioUrl: message.audioUrl || "",
+      isForwarded: true,
+      forwardedFrom: {
+        messageId: message._id,
+        userName: message.userName,
+      },
+    });
+  };
+
+  const handleDownload = (message) => {
+    const mediaUrl = message.fileUrl || message.audioUrl;
+
+    if (mediaUrl) {
+      const link = document.createElement("a");
+      link.href = mediaUrl;
+      link.download = message.fileName || "attachment";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    if (message.text) {
+      const blob = new Blob([message.text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `message-${message._id}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleInfo = (message) => {
+    const infoText = [
+      `Sender: ${message.userName || "Unknown"}`,
+      `Sent: ${new Date(message.createdAt).toLocaleString()}`,
+      `Reactions: ${(message.reactions || []).length}`,
+      `Pinned: ${(message.pinnedBy || []).length > 0 ? "Yes" : "No"}`,
+      `Starred: ${(message.starredBy || []).includes(user?.id) ? "Yes" : "No"}`,
+      `Forwarded: ${message.isForwarded ? "Yes" : "No"}`,
+    ].join("\n");
+
+    window.alert(infoText);
+  };
+
   if (!user) {
     return (
       <div className="flex flex-col h-screen justify-center items-center" style={{ backgroundColor: "#efeae2" }}>
@@ -249,14 +362,16 @@ const Chat = () => {
 
   return (
     <div
-      className="flex flex-col h-screen"
+      className="flex flex-col overflow-hidden"
       style={{
+        height: "calc(100dvh - 4rem)",
+        minHeight: "calc(100dvh - 4rem)",
         backgroundColor: "#efeae2",
         backgroundImage:
           "url('https://www.transparenttextures.com/patterns/cubes.png')",
       }}
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-3">
+      <div className="hide-scrollbar flex-1 overflow-y-auto p-6 space-y-3">
         {typingUser && (
           <p className="text-sm text-gray-500">
             {typingUser} is typing...
@@ -289,9 +404,16 @@ const Chat = () => {
                 isOwn={isOwn}
                 canDelete={!!user?.id}
                 selected={selectedMessages.includes(msg._id)}
+                currentUserId={user?.id}
                 onSelect={toggleSelect}
                 onDelete={deleteMessage}
                 onReact={addReaction}
+                onInfo={handleInfo}
+                onReply={handleReply}
+                onDownload={handleDownload}
+                onForward={handleForward}
+                onTogglePin={togglePin}
+                onToggleStar={toggleStar}
               />
 
               <div className={`text-xs text-gray-500 mt-1 ${isOwn ? "text-right mr-4" : "ml-4"}`}>
@@ -307,10 +429,29 @@ const Chat = () => {
         <div ref={chatEndRef}></div>
       </div>
 
-      <div className="p-4 bg-white border-t space-y-3">
+      <div className="sticky bottom-0 z-10 p-4 bg-white border-t space-y-3">
         {fileError && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
             {fileError}
+          </div>
+        )}
+
+        {replyTo && (
+          <div className="flex items-start justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm">
+            <div className="min-w-0">
+              <p className="font-semibold text-green-800">Replying to {replyTo.userName}</p>
+              <p className="truncate text-gray-700">
+                {replyTo.text || (replyTo.fileName ? `Attachment: ${replyTo.fileName}` : "Voice message")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyTo(null)}
+              className="rounded-full p-1 hover:bg-green-100"
+              aria-label="Cancel reply"
+            >
+              <X className="h-4 w-4 text-green-800" />
+            </button>
           </div>
         )}
 

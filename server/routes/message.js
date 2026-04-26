@@ -3,6 +3,7 @@ const multer = require("multer");
 const mongoose = require("mongoose");
 const { PassThrough } = require("stream");
 const Message = require("../models/Message");
+const User = require("../models/User");
 const router = express.Router();
 
 const storage = multer.memoryStorage();
@@ -23,8 +24,27 @@ const getMediaBucket = () => {
 };
 
 router.get("/", async (req, res) => {
-  const messages = await Message.find().sort({ createdAt: 1 });
-  res.json(messages);
+  try {
+    const userId = req.headers["x-user-id"];
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await User.findById(userId).select("createdAt").lean();
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const messages = await Message.find({
+      createdAt: { $gte: user.createdAt },
+    }).sort({ createdAt: 1 });
+
+    return res.json(messages);
+  } catch (error) {
+    console.error("Fetch messages error:", error.message);
+    return res.status(500).json({ error: "Failed to fetch messages" });
+  }
 });
 
 router.put("/delete/:id", async (req, res) => {

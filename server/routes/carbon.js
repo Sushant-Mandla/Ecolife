@@ -1,7 +1,7 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const Carbon = require("../models/CarbonFootprint");
-const authMiddleware = require("../middleware/authMiddleware");
 
 /* Calculate emissions */
 const calculateEmissions = (data) => {
@@ -46,17 +46,31 @@ const calculateEmissions = (data) => {
 };
 
 /* Submit calculator */
-router.post("/", authMiddleware, async (req, res) => {
-  const calculation = calculateEmissions(req.body);
+router.post("/", async (req, res) => {
+  try {
+    const calculation = calculateEmissions(req.body);
+    const userId = req.headers["x-user-id"];
 
-  const record = await Carbon.create({
-    userId: req.userId,
-    answers: req.body,
-    totalFootprint: calculation.total,
-    categoryBreakdown: calculation.breakdown,
-  });
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      const record = await Carbon.create({
+        userId,
+        answers: req.body,
+        totalFootprint: calculation.total,
+        categoryBreakdown: calculation.breakdown,
+      });
 
-  res.json(record);
+      return res.json(record);
+    }
+
+    return res.json({
+      totalFootprint: calculation.total,
+      categoryBreakdown: calculation.breakdown,
+      saved: false,
+    });
+  } catch (error) {
+    console.error("Carbon calculation error:", error.message);
+    return res.status(500).json({ error: "Failed to calculate carbon footprint" });
+  }
 });
 
 module.exports = router;

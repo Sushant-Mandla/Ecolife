@@ -212,8 +212,10 @@ const EcoBot = () => {
 
   return (
     <div
-      className="flex flex-col h-screen text-gray-900"
+      className="flex flex-col overflow-hidden text-gray-900"
       style={{
+        height: "calc(100dvh - 4rem)",
+        minHeight: "calc(100dvh - 4rem)",
         backgroundColor: "#efeae2",
         backgroundImage:
           "url('https://www.transparenttextures.com/patterns/cubes.png')",
@@ -280,7 +282,7 @@ const EcoBot = () => {
       </div>
 
       {/* INPUT AREA */}
-      <div className="bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 py-4 space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
+      <div className="sticky bottom-0 z-10 bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 py-4 space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
         {fileError && (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {fileError}

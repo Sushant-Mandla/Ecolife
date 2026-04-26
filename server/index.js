@@ -25,6 +25,7 @@ const energyConservationRoutes = require("./routes/energyConservation");
 
 const app = express();
 const server = http.createServer(app);
+const PORT = Number(process.env.PORT || 5000);
 
 /* ---------------- MIDDLEWARE ---------------- */
 app.use(cors());
@@ -63,14 +64,59 @@ io.on("connection", (socket) => {
   /* ----- ADD REACTION ----- */
   socket.on("addReaction", async ({ messageId, reaction }) => {
     try {
+      await Message.updateOne(
+        { _id: messageId },
+        { $pull: { reactions: { userId: reaction.userId } } }
+      );
+
       const updatedMessage = await Message.findByIdAndUpdate(
         messageId,
-        { $push: { reactions: reaction } },
+        { $addToSet: { reactions: reaction } },
         { new: true }
       );
       io.emit("reactionUpdated", updatedMessage);
     } catch (err) {
       console.error("Reaction Error:", err.message);
+    }
+  });
+
+  socket.on("togglePin", async ({ messageId, userId }) => {
+    try {
+      const message = await Message.findById(messageId).select("pinnedBy").lean();
+      if (!message) return;
+
+      const isPinned = (message.pinnedBy || []).includes(userId);
+      const updatedMessage = await Message.findByIdAndUpdate(
+        messageId,
+        isPinned
+          ? { $pull: { pinnedBy: userId } }
+          : { $addToSet: { pinnedBy: userId } },
+        { new: true }
+      );
+
+      io.emit("messageUpdated", updatedMessage);
+    } catch (err) {
+      console.error("Pin toggle error:", err.message);
+    }
+  });
+
+  socket.on("toggleStar", async ({ messageId, userId }) => {
+    try {
+      const message = await Message.findById(messageId).select("starredBy").lean();
+      if (!message) return;
+
+      const isStarred = (message.starredBy || []).includes(userId);
+      const updatedMessage = await Message.findByIdAndUpdate(
+        messageId,
+        isStarred
+          ? { $pull: { starredBy: userId } }
+          : { $addToSet: { starredBy: userId } },
+        { new: true }
+      );
+
+      io.emit("messageUpdated", updatedMessage);
+    } catch (err) {
+      console.error("Star toggle error:", err.message);
     }
   });
 
@@ -157,11 +203,22 @@ mongoose
   .then(() => {
     console.log("✅ MongoDB Connected");
 
-    server.listen(5000, () => {
-      console.log("🚀 Server running with Socket.io on port 5000");
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running with Socket.io on port ${PORT}`);
     });
   })
   .catch((err) => {
     console.error("❌ MongoDB Connection Error:", err.message);
   });
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.log(`ℹ️ Port ${PORT} is already in use. Another server instance is likely already running.`);
+    process.exit(0);
+  }
+
+  console.error("❌ Server startup error:", error.message);
+  process.exit(1);
+});
+
   require("./utils/dailyEcoTip");

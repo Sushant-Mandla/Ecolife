@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Subscriber = require("../models/Subscriber");
 const sendEmail = require("../utils/sendEmail");
-const { generateTip } = require("../utils/dailyEcoTip");
+const { getOrCreateDailyTip } = require("../utils/dailyEcoTip");
 
 router.post("/subscribe", async (req, res) => {
   try {
@@ -22,7 +22,8 @@ router.post("/subscribe", async (req, res) => {
     );
 
     try {
-      const tip = await generateTip();
+      const dailyTip = await getOrCreateDailyTip();
+      const tip = dailyTip.content;
 
       await sendEmail(
       email,
