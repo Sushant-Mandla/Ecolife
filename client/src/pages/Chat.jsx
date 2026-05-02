@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import MessageBubble from "../components/chat/MessageBubble";
 import { Mic, Square, Paperclip, Send, X } from "lucide-react";
 
-const socket = io("http://localhost:5000");
+const socket = io(`${import.meta.env.VITE_BACKEND_URL}`);
 
 const Chat = () => {
   const { user } = useContext(AuthContext);
@@ -34,7 +34,7 @@ const Chat = () => {
     }
 
     axios
-      .get("http://localhost:5000/api/messages", {
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/messages`, {
         headers: { "x-user-id": user.id },
       })
       .then((res) => setMessages(res.data))
@@ -145,7 +145,7 @@ const Chat = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await axios.post("http://localhost:5000/api/messages/upload", formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/messages/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -223,7 +223,7 @@ const Chat = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await axios.post("http://localhost:5000/api/messages/upload", formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/messages/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -262,7 +262,7 @@ const Chat = () => {
   const deleteMessage = async (id) => {
     if (!user?.id) return;
     await axios.put(
-      `http://localhost:5000/api/messages/delete/${id}`,
+      `${import.meta.env.VITE_BACKEND_URL}/api/messages/delete/${id}`,
       { userId: user.id }
     );
 

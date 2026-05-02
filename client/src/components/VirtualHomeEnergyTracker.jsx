@@ -107,7 +107,7 @@ const VirtualHomeEnergyTracker = ({ userId }) => {
       }
 
       try {
-        const res = await axios.get("http://localhost:5000/api/energy-conservation", {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/energy-conservation`, {
           headers: { "x-user-id": userId },
         });
 
@@ -138,7 +138,7 @@ const VirtualHomeEnergyTracker = ({ userId }) => {
     saveTimerRef.current = setTimeout(async () => {
       try {
         await axios.put(
-          "http://localhost:5000/api/energy-conservation",
+          `${import.meta.env.VITE_BACKEND_URL}/api/energy-conservation`,
           {
             rooms,
             activeTab,

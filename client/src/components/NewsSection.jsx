@@ -5,7 +5,7 @@ const NewsSection = () => {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/news")
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/news`)
       .then(res => setArticles(res.data))
       .catch(err => console.log(err));
   }, []);

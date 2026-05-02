@@ -204,7 +204,9 @@ app.use("/api/green-home", greenHomeRoutes);
 app.use("/api/gardening", gardeningRoutes);
 app.use("/api/subscribers", subscriberRoutes);
 app.use("/api/energy-conservation", energyConservationRoutes);
-
+app.get("/", (req, res) => {
+  res.send("Welcome to the EcoLife API!");
+});
 
 /* ---------------- DATABASE CONNECTION ---------------- */
 mongoose

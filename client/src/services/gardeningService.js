@@ -5,7 +5,7 @@ export const generateCrops = async (data) => {
 
   try {
     const res = await axios.post(
-      "http://localhost:5000/api/gardening/generate",
+      `${import.meta.env.VITE_BACKEND_URL}/api/gardening/generate`,
       data,
       {
         headers: {

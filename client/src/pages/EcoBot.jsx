@@ -26,7 +26,7 @@ const EcoBot = () => {
       if (!userId) return;
 
       try {
-        const res = await axios.get("http://localhost:5000/api/ai/history", {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/ai/history`, {
           headers: { "x-user-id": userId },
         });
 
@@ -181,7 +181,7 @@ const EcoBot = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/ai/chat",
+        `${import.meta.env.VITE_BACKEND_URL}/api/ai/chat`,
         {
           message: input,
           attachmentSummary,

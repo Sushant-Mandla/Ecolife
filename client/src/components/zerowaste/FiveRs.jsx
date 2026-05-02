@@ -37,7 +37,7 @@ const fiveRs = [
 
 const FiveRs = ({ userId }) => {
   const [index, setIndex] = useState(0);
-  const BASE = "http://localhost:5000/api/zero-waste";
+  const BASE = `${import.meta.env.VITE_BACKEND_URL}/api/zero-waste`;
 
   useEffect(() => {
     const interval = setInterval(() => {

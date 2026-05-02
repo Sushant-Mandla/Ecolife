@@ -9,7 +9,7 @@ const SustainabilityCalendar = ({ userId }) => {
   const [streak, setStreak] = useState(0);
   const [longest, setLongest] = useState(0);
 
-  const BASE = "http://localhost:5000/api/zero-waste";
+  const BASE = `${import.meta.env.VITE_BACKEND_URL}/api/zero-waste`;
 
   useEffect(() => {
     // Load from local storage initially
