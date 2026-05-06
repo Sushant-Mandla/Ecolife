@@ -40,7 +40,7 @@ const MessageBubble = ({
 
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-      <div className="relative" ref={menuRef}>
+      <div className="relative pr-8" ref={menuRef}>
         <div
           onClick={() => onSelect(msg._id)}
           className={`p-3 rounded-lg shadow max-w-xs cursor-pointer ${
@@ -95,7 +95,7 @@ const MessageBubble = ({
             setMenuOpen((prev) => !prev);
             setShowReactions(false);
           }}
-          className="absolute -right-9 top-1 rounded-full bg-white p-1.5 text-gray-700 shadow hover:bg-gray-100"
+          className="absolute right-0 top-1 rounded-full bg-white p-1.5 text-gray-700 shadow hover:bg-gray-100"
           aria-label="Open message actions"
         >
           <MoreVertical className="h-4 w-4" />

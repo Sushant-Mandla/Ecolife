@@ -26,6 +26,7 @@ const Chat = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
+  const pendingMessagesRef = useRef(new Map());
 
   useEffect(() => {
     if (!user?.id) {
@@ -43,7 +44,25 @@ const Chat = () => {
     socket.emit("userOnline", user.id);
 
     socket.on("receiveMessage", (msg) => {
-      setMessages(prev => [...prev, msg]);
+      setMessages((prev) => {
+        let next = prev;
+
+        if (msg.tempId && pendingMessagesRef.current.has(msg.tempId)) {
+          pendingMessagesRef.current.delete(msg.tempId);
+          next = prev.filter((m) => m._id !== msg.tempId);
+        } else {
+          next = prev.filter(
+            (m) =>
+              !(
+                String(m._id || "").startsWith("temp-") &&
+                m.userId === msg.userId &&
+                m.text === msg.text
+              )
+          );
+        }
+
+        return [...next, msg];
+      });
     });
 
     socket.on("reactionUpdated", (updated) => {
@@ -82,7 +101,10 @@ const Chat = () => {
   }, [messages]);
 
   const sendMessage = () => {
-    if (!text.trim() || !user?.id) return;
+    const trimmed = text.trim();
+    if (!trimmed || !user?.id) return;
+
+    const tempId = `temp-${Date.now()}`;
 
     const replyPayload = replyTo
       ? {
@@ -95,11 +117,25 @@ const Chat = () => {
         }
       : null;
 
+    const optimisticMessage = {
+      _id: tempId,
+      userId: user.id,
+      userName: user.name,
+      text: trimmed,
+      replyTo: replyPayload,
+      createdAt: new Date().toISOString(),
+    };
+
+    pendingMessagesRef.current.set(tempId, true);
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+
     socket.emit("sendMessage", {
       userId: user.id,
       userName: user.name,
-      text: text.trim(),
+      text: trimmed,
       replyTo: replyPayload,
+      tempId,
     });
 
     setText("");
@@ -369,7 +405,7 @@ const Chat = () => {
           "url('https://www.transparenttextures.com/patterns/cubes.png')",
       }}
     >
-      <div className="hide-scrollbar flex-1 overflow-y-auto p-6 space-y-3">
+      <div className="hide-scrollbar flex-1 overflow-y-auto p-4 sm:p-6 pr-12 space-y-3">
         <div className="text-sm text-gray-600">
           🟢 Online Users: {onlineUsers.length}
         </div>
@@ -431,7 +467,7 @@ const Chat = () => {
         <div ref={chatEndRef}></div>
       </div>
 
-      <div className="sticky bottom-0 z-10 p-4 pb-[env(safe-area-inset-bottom)] bg-white border-t space-y-3">
+      <div className="sticky bottom-0 z-10 p-4 pb-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] bg-white border-t space-y-3">
         {fileError && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
             {fileError}
@@ -501,7 +537,7 @@ const Chat = () => {
               socket.emit("typing", user?.name);
             }}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message or attach media..."
+            placeholder="Type a message..."
             className="border rounded-full px-3 py-2 flex-1 min-w-0"
           />
           <button

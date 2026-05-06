@@ -280,7 +280,7 @@ const EcoBot = () => {
       </div>
 
       {/* INPUT AREA */}
-      <div className="sticky bottom-0 z-10 bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 py-4 pb-[env(safe-area-inset-bottom)] space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
+      <div className="sticky bottom-0 z-10 bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 pt-4 pb-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
         {fileError && (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {fileError}
@@ -339,7 +339,7 @@ const EcoBot = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Ask anything about sustainability..."
+            placeholder="Ask about sustainability..."
             className="flex-1 min-w-0 rounded-full border border-gray-200 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
           <button
