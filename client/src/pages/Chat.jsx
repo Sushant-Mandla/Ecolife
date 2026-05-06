@@ -362,16 +362,18 @@ const Chat = () => {
 
   return (
     <div
-      className="flex flex-col overflow-hidden"
+      className="flex flex-col flex-1 min-h-0 overflow-hidden"
       style={{
-        height: "calc(100dvh - 4rem)",
-        minHeight: "calc(100dvh - 4rem)",
         backgroundColor: "#efeae2",
         backgroundImage:
           "url('https://www.transparenttextures.com/patterns/cubes.png')",
       }}
     >
       <div className="hide-scrollbar flex-1 overflow-y-auto p-6 space-y-3">
+        <div className="text-sm text-gray-600">
+          🟢 Online Users: {onlineUsers.length}
+        </div>
+
         {typingUser && (
           <p className="text-sm text-gray-500">
             {typingUser} is typing...
@@ -429,7 +431,7 @@ const Chat = () => {
         <div ref={chatEndRef}></div>
       </div>
 
-      <div className="sticky bottom-0 z-10 p-4 bg-white border-t space-y-3">
+      <div className="sticky bottom-0 z-10 p-4 pb-[env(safe-area-inset-bottom)] bg-white border-t space-y-3">
         {fileError && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
             {fileError}
@@ -463,16 +465,16 @@ const Chat = () => {
           onChange={(e) => uploadFile(e.target.files?.[0])}
         />
 
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full disabled:opacity-60"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-full disabled:opacity-60 shrink-0"
           >
             <span className="inline-flex items-center gap-2">
               <Paperclip className="h-4 w-4" />
-              Attach
+              <span className="hidden sm:inline">Attach</span>
             </span>
           </button>
 
@@ -480,13 +482,15 @@ const Chat = () => {
             type="button"
             onClick={handleMicClick}
             disabled={uploading}
-            className={`px-4 py-2 rounded-full text-white disabled:opacity-60 ${
+            className={`px-3 py-2 rounded-full text-white disabled:opacity-60 shrink-0 ${
               isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-700 hover:bg-green-800"
             }`}
           >
             <span className="inline-flex items-center gap-2">
               {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              {isRecording ? `Stop (${recordingSeconds}s)` : "Mic"}
+              <span className="hidden sm:inline">
+                {isRecording ? `Stop (${recordingSeconds}s)` : "Mic"}
+              </span>
             </span>
           </button>
 
@@ -498,24 +502,23 @@ const Chat = () => {
             }}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Type a message or attach media..."
-            className="border rounded-full px-4 py-2 flex-1"
+            className="border rounded-full px-3 py-2 flex-1 min-w-0"
           />
           <button
             onClick={sendMessage}
             disabled={uploading}
-            className="bg-green-700 text-white px-6 rounded-full disabled:opacity-60"
+            className="bg-green-700 text-white px-3 py-2 rounded-full disabled:opacity-60 shrink-0"
           >
             <span className="inline-flex items-center gap-2">
               <Send className="h-4 w-4" />
-              {uploading ? "Sending..." : "Send"}
+              <span className="hidden sm:inline">
+                {uploading ? "Sending..." : "Send"}
+              </span>
             </span>
           </button>
         </div>
       </div>
 
-      <div className="p-2 bg-gray-200 text-sm">
-        🟢 Online Users: {onlineUsers.length}
-      </div>
     </div>
   );
 };

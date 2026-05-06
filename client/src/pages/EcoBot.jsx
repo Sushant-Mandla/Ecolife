@@ -212,10 +212,8 @@ const EcoBot = () => {
 
   return (
     <div
-      className="flex flex-col overflow-hidden text-gray-900"
+      className="flex flex-col flex-1 min-h-0 overflow-hidden text-gray-900"
       style={{
-        height: "calc(100dvh - 4rem)",
-        minHeight: "calc(100dvh - 4rem)",
         backgroundColor: "#efeae2",
         backgroundImage:
           "url('https://www.transparenttextures.com/patterns/cubes.png')",
@@ -282,7 +280,7 @@ const EcoBot = () => {
       </div>
 
       {/* INPUT AREA */}
-      <div className="sticky bottom-0 z-10 bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 py-4 space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
+      <div className="sticky bottom-0 z-10 bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 py-4 pb-[env(safe-area-inset-bottom)] space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
         {fileError && (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {fileError}
@@ -314,43 +312,43 @@ const EcoBot = () => {
           onChange={handleAttachmentChange}
         />
 
-        <div className="flex gap-3 items-center">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            className="shrink-0 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
           >
             <Paperclip className="h-4 w-4" />
-            File
+            <span className="hidden sm:inline">File</span>
           </button>
 
           <button
             type="button"
             onClick={isListening ? stopVoiceInput : startVoiceInput}
-            className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`shrink-0 inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
               isListening
                 ? "bg-red-500 hover:bg-red-600 text-white"
                 : "bg-green-700 hover:bg-green-800 text-white"
             }`}
           >
             {isListening ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            {isListening ? "Stop" : "Mic"}
+            <span className="hidden sm:inline">{isListening ? "Stop" : "Mic"}</span>
           </button>
 
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Ask anything about sustainability..."
-            className="flex-1 rounded-full border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-        <button
-          onClick={sendMessage}
-            className="inline-flex items-center gap-2 rounded-full bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800 transition"
-        >
-          <Send className="h-4 w-4" />
-          Send
-        </button>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Ask anything about sustainability..."
+            className="flex-1 min-w-0 rounded-full border border-gray-200 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <button
+            onClick={sendMessage}
+            className="inline-flex items-center gap-2 rounded-full bg-green-700 px-3 py-2 font-semibold text-white hover:bg-green-800 transition shrink-0"
+          >
+            <Send className="h-4 w-4" />
+            <span className="hidden sm:inline">Send</span>
+          </button>
         </div>
       </div>
     </div>
