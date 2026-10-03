@@ -8,7 +8,7 @@ const CarbonCalculator = ({ userId }) => {
     publicKm: 0,
     shortFlights: 0,
     longFlights: 0,
-    electricityBill: 0,
+    electricityKwh: 0,
     acHours: 0,
     lpgCylinders: 0,
     meatMeals: 0,
@@ -24,13 +24,29 @@ const CarbonCalculator = ({ userId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const numericFields = [
+    "carKm",
+    "bikeKm",
+    "publicKm",
+    "shortFlights",
+    "longFlights",
+    "electricityKwh",
+    "acHours",
+    "lpgCylinders",
+    "meatMeals",
+    "dairyLevel",
+    "onlineOrders",
+    "fastFashion",
+    "plasticUse",
+  ];
+
   const fields = [
     { name: "carKm", label: "Car KM / week", min: 0, max: 2000 },
     { name: "bikeKm", label: "Bike KM / week", min: 0, max: 2000 },
     { name: "publicKm", label: "Public transport KM / week", min: 0, max: 2000 },
     { name: "shortFlights", label: "Short flights / year", min: 0, max: 100 },
     { name: "longFlights", label: "Long flights / year", min: 0, max: 100 },
-    { name: "electricityBill", label: "Electricity bill (monthly)", min: 0, max: 20000 },
+    { name: "electricityKwh", label: "Electricity use (kWh / month)", min: 0, max: 20000 },
     { name: "acHours", label: "AC hours / week", min: 0, max: 168 },
     { name: "lpgCylinders", label: "LPG cylinders / month", min: 0, max: 10 },
     { name: "meatMeals", label: "Meat meals / week", min: 0, max: 50 },
@@ -74,14 +90,49 @@ const CarbonCalculator = ({ userId }) => {
     setError("");
 
     try {
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const apiBase = import.meta.env.VITE_BACKEND_URL;
+      if (!apiBase) {
+        throw new Error("Carbon calculator API is not configured.");
+      }
       const headers = userId ? { "x-user-id": userId } : {};
+      const requestData = {
+        ...form,
+        // Keep compatibility with older Render deployments that still use
+        // the previous electricityBill field.
+        electricityBill: form.electricityKwh,
+      };
 
-      const res = await axios.post(`${apiBase}/api/carbon/`, form, { headers });
-      setResult(res.data);
+      const res = await axios.post(`${apiBase.replace(/\/+$/, "")}/api/carbon`, requestData, { headers });
+      const categories = ["transport", "energy", "food", "lifestyle", "waste"];
+      const breakdown = res.data?.categoryBreakdown || {};
+      const breakdownValues = categories.map((category) => Number(breakdown[category]));
+      if (
+        !Number.isFinite(Number(res.data?.totalFootprint)) ||
+        breakdownValues.some((value) => !Number.isFinite(value))
+      ) {
+        throw new Error("The server returned an invalid carbon calculation.");
+      }
+      const hasMeasuredInput = numericFields.some((field) => Number(form[field]) > 0);
+      const normalizedBreakdown = hasMeasuredInput
+        ? { ...breakdown, waste: 0 }
+        : { transport: 0, energy: 0, food: 0, lifestyle: 0, waste: 0 };
+      const totalFootprint = hasMeasuredInput
+        ? Number(
+            categories
+              .reduce((total, category) => total + Number(normalizedBreakdown[category] || 0), 0)
+              .toFixed(2)
+          )
+        : 0;
+
+      setResult({
+        ...res.data,
+        totalFootprint,
+        categoryBreakdown: normalizedBreakdown,
+      });
     } catch (submitError) {
       setError(
         submitError.response?.data?.error ||
+          submitError.message ||
           "Could not calculate footprint right now. Please try again."
       );
     } finally {
@@ -107,6 +158,9 @@ const CarbonCalculator = ({ userId }) => {
             </h2>
             <p className="mt-2 max-w-xl text-sm text-slate-600 md:text-base">
               Estimate your monthly emissions and understand which lifestyle choices have the biggest climate impact.
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Travel and energy use UK Government 2025 conversion factors; food uses Our World in Data global averages.
             </p>
           </div>
           <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
@@ -161,17 +215,17 @@ const CarbonCalculator = ({ userId }) => {
           <div className="mt-8 rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50 p-6 shadow-inner animate-[reveal-up_500ms_ease-out_forwards]">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Your Monthly Result</p>
             <h3 className="mt-2 text-3xl font-black text-slate-900" style={{ fontFamily: '"Fraunces", serif' }}>
-              {result.totalFootprint.toFixed(2)} kg CO2
+              {Number(result.totalFootprint).toFixed(2)} kg CO2
             </h3>
             <p className="mt-1 text-lg font-bold text-emerald-800">{feedback.title}</p>
             <p className="mt-2 text-slate-700">{feedback.text}</p>
 
             {result.categoryBreakdown && (
               <div className="mt-5 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
-                <p>Transport: {result.categoryBreakdown.transport.toFixed(2)} kg</p>
-                <p>Energy: {result.categoryBreakdown.energy.toFixed(2)} kg</p>
-                <p>Food: {result.categoryBreakdown.food.toFixed(2)} kg</p>
-                <p>Lifestyle: {result.categoryBreakdown.lifestyle.toFixed(2)} kg</p>
+                <p>Transport: {Number(result.categoryBreakdown.transport || 0).toFixed(2)} kg</p>
+                <p>Energy: {Number(result.categoryBreakdown.energy || 0).toFixed(2)} kg</p>
+                <p>Food: {Number(result.categoryBreakdown.food || 0).toFixed(2)} kg</p>
+                <p>Lifestyle: {Number(result.categoryBreakdown.lifestyle || 0).toFixed(2)} kg</p>
               </div>
             )}
           </div>

@@ -26,6 +26,12 @@ const MessageBubble = ({
   const isPinnedByMe = (msg.pinnedBy || []).includes(currentUserId);
   const isStarredByMe = (msg.starredBy || []).includes(currentUserId);
 
+  const closeMenu = (event) => {
+    event.stopPropagation();
+    setMenuOpen(false);
+    setShowReactions(false);
+  };
+
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (!menuRef.current?.contains(event.target)) {
@@ -109,7 +115,8 @@ const MessageBubble = ({
                   <button
                     key={emoji}
                     type="button"
-                    onClick={() => {
+                    onClick={(event) => {
+                      event.stopPropagation();
                       onReact(msg._id, emoji);
                       setMenuOpen(false);
                       setShowReactions(false);
@@ -122,35 +129,38 @@ const MessageBubble = ({
               </div>
             ) : null}
 
-            <button type="button" onClick={() => onInfo(msg)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
+            <button type="button" onClick={(event) => { closeMenu(event); onInfo(msg); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
               <Info className="h-4 w-4" /> Message info
             </button>
-            <button type="button" onClick={() => onReply(msg)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
+            <button type="button" onClick={(event) => { closeMenu(event); onReply(msg); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
               <Reply className="h-4 w-4" /> Reply
             </button>
             <button
               type="button"
-              onClick={() => setShowReactions((prev) => !prev)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowReactions((prev) => !prev);
+              }}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100"
             >
               <Smile className="h-4 w-4" /> React
             </button>
-            <button type="button" onClick={() => onDownload(msg)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
+            <button type="button" onClick={(event) => { closeMenu(event); onDownload(msg); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
               <Download className="h-4 w-4" /> Download
             </button>
-            <button type="button" onClick={() => onForward(msg)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
+            <button type="button" onClick={(event) => { closeMenu(event); onForward(msg); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100">
               <Forward className="h-4 w-4" /> Forward
             </button>
             <button
               type="button"
-              onClick={() => onTogglePin(msg._id)}
+              onClick={(event) => { closeMenu(event); onTogglePin(msg._id); }}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100"
             >
               <Pin className="h-4 w-4" /> {isPinnedByMe ? "Unpin" : "Pin"}
             </button>
             <button
               type="button"
-              onClick={() => onToggleStar(msg._id)}
+              onClick={(event) => { closeMenu(event); onToggleStar(msg._id); }}
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100"
             >
               <Star className="h-4 w-4" /> {isStarredByMe ? "Unstar" : "Star"}
@@ -158,7 +168,7 @@ const MessageBubble = ({
             {canDelete && (
               <button
                 type="button"
-                onClick={() => onDelete(msg._id)}
+                onClick={(event) => { closeMenu(event); onDelete(msg._id); }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-red-600 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" /> {isOwn ? "Delete" : "Delete for me"}

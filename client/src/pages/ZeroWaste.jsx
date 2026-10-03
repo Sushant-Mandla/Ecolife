@@ -4,7 +4,7 @@ import CarbonCalculator from "../components/zerowaste/CarbonCalculator";
 
 const ZeroWaste = () => {
   const user = JSON.parse(localStorage.getItem("user"));
-  const userId = user?._id;
+  const userId = user?.id || user?._id;
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 py-16 space-y-16">

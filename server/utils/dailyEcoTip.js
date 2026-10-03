@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const axios = require("axios");
 const Subscriber = require("../models/Subscriber");
+const EcoTipDelivery = require("../models/EcoTipDelivery");
 const DailyEcoTip = require("../models/DailyEcoTip");
 const sendEmail = require("./sendEmail");
 
@@ -178,6 +179,19 @@ const sendDailyTipsIfNeeded = async () => {
         await Subscriber.updateOne(
           { _id: sub._id },
           { $set: { lastTipSentAt: new Date() } }
+        );
+        await EcoTipDelivery.updateOne(
+          { subscriberId: sub._id, tipDate: startOfToday },
+          {
+            $setOnInsert: {
+              subscriberId: sub._id,
+              email: sub.email,
+              tipDate: startOfToday,
+              tipContent: tip,
+              sentAt: new Date(),
+            },
+          },
+          { upsert: true }
         );
       } catch (emailError) {
         console.error(`Failed to send daily eco tip to ${sub.email}:`, emailError.message);

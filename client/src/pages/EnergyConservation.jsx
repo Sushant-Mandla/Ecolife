@@ -6,7 +6,7 @@ import EnergyChecklist from "../components/EnergyChecklist";
 
 const EnergyConservation = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
-  const userId = user?._id;
+  const userId = user?.id || user?._id;
 
   return (
     <div className="bg-gray-50 min-h-screen">

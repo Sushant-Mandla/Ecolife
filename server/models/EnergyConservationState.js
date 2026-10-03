@@ -37,6 +37,12 @@ const energyConservationStateSchema = new mongoose.Schema(
       type: String,
       default: "Living Room",
     },
+    calculated: {
+      dailyEnergyKwh: { type: Number, default: 0 },
+      dailyCost: { type: Number, default: 0 },
+      dailyEmissionsKg: { type: Number, default: 0 },
+      suggestions: { type: [String], default: [] },
+    },
   },
   { timestamps: true }
 );

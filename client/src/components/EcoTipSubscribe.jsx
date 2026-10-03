@@ -17,7 +17,10 @@ const EcoTipSubscribe = () => {
       setMessage(res.data.message);
       setEmail("");
     } catch (error) {
-      setMessage("Subscription failed or already subscribed.");
+      setMessage(
+        error.response?.data?.message ||
+          "Unable to subscribe right now. Please try again."
+      );
     }
   };
 

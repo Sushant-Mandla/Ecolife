@@ -41,9 +41,7 @@ const Chat = () => {
       .then((res) => setMessages(res.data))
       .catch(() => setMessages([]));
 
-    socket.emit("userOnline", user.id);
-
-    socket.on("receiveMessage", (msg) => {
+    const handleReceiveMessage = (msg) => {
       setMessages((prev) => {
         let next = prev;
 
@@ -63,33 +61,45 @@ const Chat = () => {
 
         return [...next, msg];
       });
-    });
+    };
 
-    socket.on("reactionUpdated", (updated) => {
-      setMessages(prev =>
-        prev.map(m => m._id === updated._id ? updated : m)
-      );
-    });
-
-    socket.on("messageUpdated", (updated) => {
+    const handleReactionUpdated = (updated) => {
+      if (!updated?._id) return;
       setMessages((prev) =>
         prev.map((m) => (m._id === updated._id ? updated : m))
       );
-    });
+    };
 
-    socket.on("onlineUsers", setOnlineUsers);
+    const handleMessageUpdated = (updated) => {
+      if (!updated?._id) return;
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updated._id ? updated : m))
+      );
+    };
 
-    socket.on("typing", (name) => {
+    const handleOnlineUsers = (users) => setOnlineUsers(Array.isArray(users) ? users : []);
+
+    const handleTyping = (name) => {
       setTypingUser(name);
       setTimeout(() => setTypingUser(null), 2000);
-    });
+    };
+    const handleSocketConnect = () => socket.emit("userOnline", user.id);
+
+    socket.on("receiveMessage", handleReceiveMessage);
+    socket.on("reactionUpdated", handleReactionUpdated);
+    socket.on("messageUpdated", handleMessageUpdated);
+    socket.on("onlineUsers", handleOnlineUsers);
+    socket.on("typing", handleTyping);
+    socket.on("connect", handleSocketConnect);
+    handleSocketConnect();
 
     return () => {
-      socket.off("receiveMessage");
-      socket.off("reactionUpdated");
-      socket.off("messageUpdated");
-      socket.off("onlineUsers");
-      socket.off("typing");
+      socket.off("receiveMessage", handleReceiveMessage);
+      socket.off("reactionUpdated", handleReactionUpdated);
+      socket.off("messageUpdated", handleMessageUpdated);
+      socket.off("onlineUsers", handleOnlineUsers);
+      socket.off("typing", handleTyping);
+      socket.off("connect", handleSocketConnect);
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
@@ -234,7 +244,7 @@ const Chat = () => {
       };
 
       recorder.start();
-    } catch (error) {
+    } catch {
       setFileError("Microphone access is required to record audio.");
     }
   };
@@ -398,17 +408,18 @@ const Chat = () => {
 
   return (
     <div
-      className="flex flex-col flex-1 min-h-0 overflow-hidden"
+      className="flex h-full flex-col min-h-0 overflow-hidden"
       style={{
         backgroundColor: "#efeae2",
         backgroundImage:
           "url('https://www.transparenttextures.com/patterns/cubes.png')",
       }}
     >
-      <div className="hide-scrollbar flex-1 overflow-y-auto p-4 sm:p-6 pr-12 space-y-3">
-        <div className="text-sm text-gray-600">
-          🟢 Online Users: {onlineUsers.length}
-        </div>
+      <div className="flex-none border-b border-black/5 bg-[#efeae2]/95 px-4 py-3 text-sm text-gray-600 backdrop-blur sm:px-6">
+        🟢 Online Users: {onlineUsers.length}
+      </div>
+
+      <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto p-4 pr-12 sm:p-6 sm:pr-12 space-y-3">
 
         {typingUser && (
           <p className="text-sm text-gray-500">
@@ -467,7 +478,7 @@ const Chat = () => {
         <div ref={chatEndRef}></div>
       </div>
 
-      <div className="sticky bottom-0 z-10 p-4 pb-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] bg-white border-t space-y-3">
+      <div className="flex-none border-t bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:pb-6 space-y-3">
         {fileError && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
             {fileError}

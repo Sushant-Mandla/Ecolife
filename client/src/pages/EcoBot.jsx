@@ -4,7 +4,7 @@ import { Mic, Square, Paperclip, Send, X } from "lucide-react";
 
 const EcoBot = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
-  const userId = user?._id || "";
+  const userId = user?.id || user?._id || "";
 
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -212,7 +212,7 @@ const EcoBot = () => {
 
   return (
     <div
-      className="flex flex-col flex-1 min-h-0 overflow-hidden text-gray-900"
+      className="flex h-full flex-col min-h-0 overflow-hidden text-gray-900"
       style={{
         backgroundColor: "#efeae2",
         backgroundImage:
@@ -221,7 +221,7 @@ const EcoBot = () => {
     >
 
       {/* HEADER */}
-      <div className="bg-white/85 backdrop-blur-md border-b border-black/5 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="flex-none border-b border-black/5 bg-white/85 px-6 py-4 flex items-center justify-between shadow-sm backdrop-blur-md">
         <h1 className="text-xl font-bold text-green-700">
           🌱 EcoBot AI
         </h1>
@@ -231,7 +231,7 @@ const EcoBot = () => {
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-4">
 
         {messages.map((msg, index) => (
           <div
@@ -280,7 +280,7 @@ const EcoBot = () => {
       </div>
 
       {/* INPUT AREA */}
-      <div className="sticky bottom-0 z-10 bg-white/85 backdrop-blur-md border-t border-black/5 px-4 md:px-6 pt-4 pb-6 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
+      <div className="flex-none border-t border-black/5 bg-white/85 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] md:px-6 md:pb-6 space-y-3 text-gray-900 shadow-[0_-1px_0_rgba(0,0,0,0.04)] backdrop-blur-md">
         {fileError && (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {fileError}

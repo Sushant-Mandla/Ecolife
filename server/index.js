@@ -48,16 +48,23 @@ const io = new Server(server, {
   },
 });
 
-let onlineUsers = new Set();
+const onlineUsers = new Map();
+
+const broadcastOnlineUsers = () => {
+  io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+};
 
 io.on("connection", (socket) => {
   console.log("🟢 User Connected");
+  broadcastOnlineUsers();
 
   /* ----- USER ONLINE ----- */
   socket.on("userOnline", (userId) => {
-    socket.userId = userId; // VERY IMPORTANT
-    onlineUsers.add(userId);
-    io.emit("onlineUsers", Array.from(onlineUsers));
+    if (!userId) return;
+
+    socket.userId = String(userId);
+    onlineUsers.set(socket.userId, (onlineUsers.get(socket.userId) || 0) + 1);
+    broadcastOnlineUsers();
   });
 
   /* ----- SEND MESSAGE ----- */
@@ -73,17 +80,30 @@ io.on("connection", (socket) => {
   /* ----- ADD REACTION ----- */
   socket.on("addReaction", async ({ messageId, reaction }) => {
     try {
+      if (!mongoose.isValidObjectId(messageId) || !reaction?.userId || !reaction?.emoji) {
+        return;
+      }
+
       await Message.updateOne(
         { _id: messageId },
-        { $pull: { reactions: { userId: reaction.userId } } }
+        { $pull: { reactions: { userId: String(reaction.userId) } } }
       );
 
       const updatedMessage = await Message.findByIdAndUpdate(
         messageId,
-        { $addToSet: { reactions: reaction } },
+        {
+          $addToSet: {
+            reactions: {
+              userId: String(reaction.userId),
+              emoji: String(reaction.emoji),
+            },
+          },
+        },
         { new: true }
       );
-      io.emit("reactionUpdated", updatedMessage);
+      if (updatedMessage) {
+        io.emit("reactionUpdated", updatedMessage);
+      }
     } catch (err) {
       console.error("Reaction Error:", err.message);
     }
@@ -137,8 +157,13 @@ io.on("connection", (socket) => {
   /* ----- DISCONNECT ----- */
   socket.on("disconnect", () => {
     if (socket.userId) {
-      onlineUsers.delete(socket.userId);
-      io.emit("onlineUsers", Array.from(onlineUsers));
+      const connectionCount = onlineUsers.get(socket.userId) || 0;
+      if (connectionCount <= 1) {
+        onlineUsers.delete(socket.userId);
+      } else {
+        onlineUsers.set(socket.userId, connectionCount - 1);
+      }
+      broadcastOnlineUsers();
     }
     console.log("🔴 User Disconnected");
   });

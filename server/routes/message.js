@@ -31,14 +31,12 @@ router.get("/", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const user = await User.findById(userId).select("createdAt").lean();
+    const user = await User.findById(userId).select("_id").lean();
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const messages = await Message.find({
-      createdAt: { $gte: user.createdAt },
-    }).sort({ createdAt: 1 });
+    const messages = await Message.find({}).sort({ createdAt: 1 });
 
     return res.json(messages);
   } catch (error) {

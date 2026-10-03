@@ -1,6 +1,7 @@
 const axios = require("axios");
 const mongoose = require("mongoose");
 const GardeningInput = require("../models/GardeningInput");
+const GardeningRecommendation = require("../models/GardeningRecommendation");
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
@@ -326,8 +327,10 @@ exports.generateCrops = async (req, res) => {
     const {
       climate,
       temperature,
+      temperatureRange,
       soil,
       budget,
+      budgetLevel,
       waterAvailability,
       spaceType,
       sunlightHours,
@@ -340,12 +343,14 @@ exports.generateCrops = async (req, res) => {
       await GardeningInput.create({
         userId,
         climate,
-        temperature,
+        temperature: String(temperatureRange || temperature || ""),
         soil,
-        budget,
+        budget: String(budgetLevel || budget || ""),
+        temperatureRange: String(temperatureRange || temperature || ""),
+        budgetLevel: String(budgetLevel || budget || ""),
         waterAvailability,
         spaceType,
-        sunlightHours,
+        sunlightHours: Number(sunlightHours) || 0,
       });
     }
 
@@ -353,9 +358,9 @@ exports.generateCrops = async (req, res) => {
 Return ONLY valid JSON.
 Suggest 4 crops suitable for:
 Climate: ${climate}
-Temperature: ${temperature}°C
+Temperature: ${temperatureRange || temperature}°C
 Soil: ${soil}
-Budget: ₹${budget}
+Budget: ${budgetLevel || budget}
 Water Availability: ${waterAvailability}
 Space: ${spaceType}
 Sunlight: ${sunlightHours} hours
@@ -418,6 +423,22 @@ Format:
         };
       })
     );
+
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      await GardeningRecommendation.create({
+        userId,
+        inputs: {
+          climate,
+          temperature,
+          soil,
+          budget,
+          waterAvailability,
+          spaceType,
+          sunlightHours,
+        },
+        crops: cropsWithImages,
+      });
+    }
 
     res.json({ crops: cropsWithImages });
 

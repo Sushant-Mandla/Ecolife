@@ -2,24 +2,57 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 
+const calculateStreaks = (dates) => {
+  const uniqueDates = [...new Set(dates)].sort();
+  const completedDateSet = new Set(uniqueDates);
+  const today = new Date().toISOString().slice(0, 10);
+  let current = 0;
+  let currentDate = new Date(`${today}T00:00:00.000Z`);
+
+  while (completedDateSet.has(currentDate.toISOString().slice(0, 10))) {
+    current++;
+    currentDate.setUTCDate(currentDate.getUTCDate() - 1);
+  }
+
+  let longest = uniqueDates.length ? 1 : 0;
+  let run = uniqueDates.length ? 1 : 0;
+
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const previous = new Date(`${uniqueDates[i - 1]}T00:00:00.000Z`);
+    const currentDate = new Date(`${uniqueDates[i]}T00:00:00.000Z`);
+    const diff = (currentDate - previous) / (1000 * 60 * 60 * 24);
+
+    if (diff === 1) {
+      run++;
+      longest = Math.max(longest, run);
+    } else {
+      run = 1;
+    }
+  }
+
+  return { current, longest };
+};
+
 const SustainabilityCalendar = ({ userId }) => {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [completedDates, setCompletedDates] = useState([]);
   const [streak, setStreak] = useState(0);
   const [longest, setLongest] = useState(0);
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
 
   const BASE = `${import.meta.env.VITE_BACKEND_URL}/api/zero-waste`;
 
   useEffect(() => {
     // Load from local storage initially
     const localDates = JSON.parse(localStorage.getItem("zeroWasteDates")) || [];
-    const localStreak = parseInt(localStorage.getItem("zeroWasteStreak") || "0", 10);
-    const localLongest = parseInt(localStorage.getItem("zeroWasteLongest") || "0", 10);
+    const localStreaks = calculateStreaks(localDates);
     
     setCompletedDates(localDates);
-    setStreak(localStreak);
-    setLongest(localLongest);
+    setStreak(localStreaks.current);
+    setLongest(localStreaks.longest);
   }, []);
 
   useEffect(() => {
@@ -50,6 +83,9 @@ const SustainabilityCalendar = ({ userId }) => {
     }
   }, [userId]);
 
+  const isFutureMonth = year > currentYear || (year === currentYear && month >= currentMonth + 1);
+  const isFutureDate = (date) => date > today.toISOString().slice(0, 10);
+
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthName = new Date(year, month).toLocaleString("default", {
     month: "long",
@@ -57,20 +93,19 @@ const SustainabilityCalendar = ({ userId }) => {
 
   const toggleDate = async (date) => {
     // Prevent unchecking once a day is completed.
-    if (completedDates.includes(date)) return;
+    if (completedDates.includes(date) || isFutureDate(date)) return;
 
     // Optimistic UI update & Local Storage saving
     const newDates = [...completedDates, date];
-    const newStreak = streak + 1;
-    const newLongest = Math.max(longest, newStreak);
+    const newStreaks = calculateStreaks(newDates);
 
     setCompletedDates(newDates);
-    setStreak(newStreak);
-    setLongest(newLongest);
+    setStreak(newStreaks.current);
+    setLongest(newStreaks.longest);
 
     localStorage.setItem("zeroWasteDates", JSON.stringify(newDates));
-    localStorage.setItem("zeroWasteStreak", newStreak.toString());
-    localStorage.setItem("zeroWasteLongest", newLongest.toString());
+    localStorage.setItem("zeroWasteStreak", newStreaks.current.toString());
+    localStorage.setItem("zeroWasteLongest", newStreaks.longest.toString());
 
     if (userId) {
       try {
@@ -121,8 +156,10 @@ const SustainabilityCalendar = ({ userId }) => {
           </p>
           <button
             type="button"
+            disabled={isFutureMonth}
             onClick={() =>
               setMonth((prev) => {
+                if (isFutureMonth) return prev;
                 if (prev === 11) {
                   setYear((y) => y + 1);
                   return 0;
@@ -142,6 +179,7 @@ const SustainabilityCalendar = ({ userId }) => {
           const day = i + 1;
           const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const done = completedDates.includes(date);
+          const future = isFutureDate(date);
 
           return (
             <motion.button
@@ -149,10 +187,12 @@ const SustainabilityCalendar = ({ userId }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => toggleDate(date)}
-              disabled={done}
+              disabled={done || future}
               className={`p-4 rounded-xl font-bold transition-all duration-300 shadow-sm ${
                 done
                   ? "bg-gradient-to-br from-green-500 to-green-600 text-white cursor-not-allowed transform scale-100 shadow-green-200"
+                  : future
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-gray-100 hover:bg-green-100 hover:text-green-800 text-gray-700"
               }`}
             >
